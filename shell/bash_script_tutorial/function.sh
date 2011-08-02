@@ -1,5 +1,5 @@
-!/bin/bash
-USAGE: ./function.sh
+#!/bin/bash
+#USAGE: ./function.sh
 # BASH FUNCTIONS CAN BE DECLARED IN ANY ORDER
 function function_B {
         echo Function B.
