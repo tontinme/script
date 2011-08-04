@@ -5,6 +5,11 @@ echo '### let ###'
 let ADDITION=3+5
 echo "3 + 5 =" $ADDITION
 
+echo $(( 3 + 5 ))
+
+myvar="3"
+echo $(( $myvar + 5 ))
+
 # bash subtraction
 let SUBTRACTION=7-8
 echo "7 - 8 =" $SUBTRACTION 
