@@ -15,6 +15,7 @@ display)
 		echo "------------------------------------"
 		for conf_name in $CONF_NAME; do
 			for check_path in $CHECK_PATH; do
+				[ -f $check_path/$conf_name ] || echo "Can't found $conf_name in $check_path"; continue
 				grep $key_name $check_path/$conf_name || echo "no $key_name found in $check_path/$conf_name"
 			done
 		done
