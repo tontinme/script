@@ -16,6 +16,7 @@ case $case in
     3) echo "You selected phyton";;
     4) echo "You selected c++";;
     5) exit
+    *) echo "wrong input"; exit ;;
 esac 
 
 bash case statement conditiona
