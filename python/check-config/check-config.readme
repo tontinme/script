@@ -1,0 +1,137 @@
+需求：
+   #检查某个关键词都出现在哪些配置文件中
+	显示出现该关键词的所有文件(机器号：路径/文件名:具体配置)
+   #检查某个关键词是否在其所在的全部配置文件中都配置正确
+	列举所有文件中该关键词的具体配置(机器号：路径/文件名：具体配置)
+   #检查某个程序中都包含哪些关键词
+	列出该程序中所有配置文件的所有关键字具体配置(机器号：路径/文件名：具体配置)
+
+设计：
+#按程序显示(检查某个程序中都包含哪些关键词)
+  程序1(只显示程序名)
+  	#配置文件1(显示配置文件名，包括绝对路径)
+	  机器1: cat
+	  #配置文件的机器名 + 内容(只显示=号前面的关键字名称&显示整个文件的内容?)
+  	  机器2: cat
+	#配置文件2
+  	  机器1: cat
+  	  机器2: cat
+  程序2
+	#配置文件1
+  	  机器1: cat
+  	  机器2: cat
+	#配置文件2
+  	  机器1: cat
+  	  机器2: cat
+#按关键字显示
+  关键字1(关键字名称)
+  	#配置文件1(配置文件名，包括绝对路径)
+	  机器1：cat(机器名 + 关键字的具体配置)
+	  机器2: cat
+  	#配置文件2
+	  机器1：cat
+	  机器2: cat
+  关键字2
+  	#配置文件1
+	  机器1：cat
+	  机器2: cat
+  	#配置文件2
+	  机器1：cat
+	  机器2: cat
+
+实现：
+  ssh user@remotehost
+  find(keyword,file)
+  	display result
+  必须指定搜索文件的类型，否则可能会出现如下情况：
+  	107:/home/workspace/monitor47/TA/release-1.0.7/bin>grep -ir kfs_host ./*
+	Binary file ./abstractor/abstractor matches
+	Binary file ./tools/import_stable matches
+	./tracker/README:		kfs_host,
+	./tracker/module/module.ini:kfs_host=93.mzhen.cn
+	Binary file ./tracker/module/audience_compute/monitor_calc matches
+	Binary file ./tracker/module/cookie_upgrade matches
+#按程序显示(检查某个程序中都包含哪些关键词)
+  tracker
+  	/home/workspace/tracker/conf/tracker.conf
+	  112.mzhen.cn: 
+	  	tracker_host,register_url
+	  113.mzhen.cn: 
+	  	tracker_host,register_url
+	  114.mzhen.cn: 
+	  	tracker_host,register_url
+	  115.mzhen.cn: 
+	  	tracker_host,register_url
+	/home/workspace/tracker/module/module.ini
+	  112.mzhen.cn: 
+	  	final_turf_dir
+	  113.mzhen.cn: 
+	  	final_turf_dir
+	  114.mzhen.cn: 
+	  	final_turf_dir
+	  115.mzhen.cn: 
+	  	final_turf_dir
+  abstractor
+  	/home/workspace/abstractor/conf/abstractor.conf
+	  112.mzhen.cn: 
+	  	mysql_host,log_dir
+	  113.mzhen.cn: 
+	  	mysql_host,log_dir
+	  114.mzhen.cn: 
+	  	mysql_host,log_dir
+	  115.mzhen.cn: 
+	  	mysql_host,log_dir
+	/home/workspace/abstractor/conf/logserver.conf
+	  112.mzhen.cn: 
+	  	logserver_ID
+	  113.mzhen.cn: 
+	  	logserver_ID
+	  114.mzhen.cn: 
+	  	logserver_ID
+	  115.mzhen.cn: 
+	  	logserver_ID
+#按关键字显示
+  kfs_host
+	/home/workspace/abstractor/conf/abstractor.conf
+	  112.mzhen.cn : kfs_host=93.mzhen.cn
+	/home/workspace/generator/conf/generator.conf
+	  113.mzhen.cn : kfs_host=93.mzhen.cn
+	/home/workspace/tracker/module/module.ini
+	  112.mzhen.cn : kfs_host=93.mzhen.cn
+	  113.mzhen.cn : kfs_host=93.mzhen.cn
+	  114.mzhen.cn : kfs_host=93.mzhen.cn
+	  115.mzhen.cn : kfs_host=93.mzhen.cn
+  关键字2
+  	#配置文件1
+	  机器1：cat
+	  机器2: cat
+  	#配置文件2
+	  机器1：cat
+	  机器2: cat
+
+#伪码概要:
+#
+# -*- coding: utf-8 -*-
+
+def readConfig()
+def isTargetFile(filename)
+def findConfigFile()
+
+#按程序显示
+#注意：这里的count并不都是同一个
+if __name__ == '__main_':
+	-- 'check-config.cfg' -->
+        readConfig()
+                return content_List['program_List','config_list_list','path_list_list','machine_list_list']
+        for pro_gram in program_List[count]
+                -- 'config_list_list[count]' -->
+                isTargetFile(filename)
+                        return True&False
+                -- 'path_list_list[count]' -->
+                findConfigFile(path)
+                        return configFilePathList
+		#这里需要继续设计函数
+                -- 'machine_list_list' -->
+                for machine in marhine_list_list[count]
+               		-- 'configFilePathList' -->
+                	ssh user@machine 'cat configFilePathList[count]'
