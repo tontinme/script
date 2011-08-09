@@ -5,6 +5,10 @@
 	列举所有文件中该关键词的具体配置(机器号：路径/文件名：具体配置)
    #检查某个程序中都包含哪些关键词
 	列出该程序中所有配置文件的所有关键字具体配置(机器号：路径/文件名：具体配置)
+   #检查程序是否正常运行
+   	通过各个程序部署文档给出的方法去检测各个日志的输出
+   #检查各个程序需要创建的文件夹是否存在，权限是否正确
+   	如果不存在，自动创建，并检查文件属主
 
 设计：
 #按程序显示(检查某个程序中都包含哪些关键词)
@@ -122,14 +126,16 @@ def findConfigFile()
 if __name__ == '__main_':
 	-- 'check-config.cfg' -->
         readConfig()
-                return content_List['program_List','config_list_list','path_list_list','machine_list_list']
-        for pro_gram in program_List[count]
-                -- 'config_list_list[count]' -->
-                isTargetFile(filename)
+                return program_List,config_Dict,path_Dict,machine_Dict
+	-- 'program_List,config_Dict,path_Dict' -->
+	findConfigFile():
+                -- 'configSet_List' -->
+                isTargetFile(file_name,config_file_set)
                         return True&False
-                -- 'path_list_list[count]' -->
-                findConfigFile(path)
+                -- 'pathSet_List' -->
+                configFilePath(pathList,config_file_set)
                         return configFilePathList
+		return configFilePathDict
 		#这里需要继续设计函数
                 -- 'machine_list_list' -->
                 for machine in marhine_list_list[count]
