@@ -53,6 +53,7 @@ def configFilePath(pathList,config_file_set,file_callback=None, topdown=True):
 				if file_callback: file_callback(file_path)
 	return configFile_Path_List
 
+#按程序分类存储各个配置文件的具体路径
 def findConfigFile():
 	configFile_Path_Dict = {}
 	for program in program_List:
@@ -60,6 +61,17 @@ def findConfigFile():
 		pathSet_List = path_Dict[program]
 		configFile_Path_Dict[program] = configFilePath(pathSet_List,configSet_List)
 	return configFile_Path_Dict
+
+#显示配置文件内容
+def catConfigFile(machine,config):
+	return "coming soon!"
+
+def displayConfigFile():
+	for program in program_List:
+		for configFile in configFilePathDict[program]:
+			for machine in machine_Dict[program]:
+				catConfigFile(machine,configFile)
+				print "%s:%s:%s" % (machine,program,configFile)
 
 if __name__ == '__main__':
 	path_Dict  = {}
@@ -70,7 +82,6 @@ if __name__ == '__main__':
 	print path_Dict
 	print config_Dict
 	print machine_Dict
-	target_file_suffixes = ['conf','ini']
-        path = "/home/workspace/"
         configFilePathDict = findConfigFile()
 	print configFilePathDict
+	displayConfigFile()
