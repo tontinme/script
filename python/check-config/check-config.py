@@ -1,6 +1,7 @@
 #!/usr/bin/env python # -*- coding: utf-8 -*-
-import os
+import os,sys
 from ConfigParser import ConfigParser
+import paramiko
 
 # 读取配置文件，并存储
 def readConfig():
@@ -35,6 +36,7 @@ def isTargetFile(file_name,config_file_set):
         return False
 
 #查找给出的配置文件的具体路径
+#这里要更改为ssh连接,即从远程机器上判断具体路径
 def configFilePath(pathList,config_file_set,file_callback=None, topdown=True):
 	num_Index = 0
 	configFile_Path_List = []
@@ -53,25 +55,90 @@ def configFilePath(pathList,config_file_set,file_callback=None, topdown=True):
 				if file_callback: file_callback(file_path)
 	return configFile_Path_List
 
+def getConfigFilePath(machine,program_path,config_type,auth_method,auth_fileORpass,port=22,username='supertool'):
+	hostname = machine
+        #com_mand = 'cat %s' % config
+        com_mand = 'find %s -name *.%s' % (program_path,config_type)
+        paramiko.util.log_to_file('check-ssh.log')
+        s = paramiko.SSHClient()
+        s.load_system_host_keys()
+        if auth_method == 1:
+                key = paramiko.RSAKey.from_private_key_file(auth_fileORpass)
+                s.connect(hostname,port,username,pkey=key)
+        elif auth_method == 0:
+                s.connect(hostname,port,username,auth_fileORpass)
+        else:
+                print "Wrong authorized method"
+                sys.exit(1)
+        stdin, stdout, stderr = s.exec_command(com_mand)
+        fileContent = stdout.read()
+        fileError = stderr.read()
+        s.close
+        if fileError != '':
+                return fileError
+        else:
+                return fileContent
+
 #按程序分类存储各个配置文件的具体路径
-def findConfigFile():
+def findConfigFile(auth_method,auth_fileORpass):
 	configFile_Path_Dict = {}
 	for program in program_List:
 		configSet_List = config_Dict[program]
 		pathSet_List = path_Dict[program]
-		configFile_Path_Dict[program] = configFilePath(pathSet_List,configSet_List)
+		machineSet_List = machine_Dict[program]
+		#configFilePath_List = catConfigFile(machineSet)
+		#configFile_Path_Dict[program] = configFilePath(pathSet_List,configSet_List)
+		print auth_method,auth_fileORpass
+
+		machine_Number = machineSet_List[0]
+		config_Content_List = []
+		for config_Path in pathSet_List:
+			for config_Type in configSet_List:
+        			config_Content = catConfigFile(machine_Number,config_Path,config_Type,auth_method,auth_fileORpass)
+        			#print config_Content
+        			config_Content_List_Tmp = config_Content.split('\n')
+        			config_Content_List.extend(config_Content_List_Tmp[0:(len(config_Content_List_Tmp)-1)])
+
+		configFile_Path_Dict[program] = config_Content_List
 	return configFile_Path_Dict
 
 #显示配置文件内容
-def catConfigFile(machine,config):
-	return "coming soon!"
+#def catConfigFile(machine,config):
+#	return "coming soon!"
+def catConfigFile(machine,config,auth_method,auth_fileORpass,port=22,username='supertool'):
+	hostname = machine
+        #com_mand = 'cat %s' % config
+	#这里只寻找含有=的行，但是需要注意，有些配置文件不含=，比如abstractor的logserver.conf
+        com_mand = 'grep = %s' % config
+        paramiko.util.log_to_file('check-ssh.log')
+        s = paramiko.SSHClient()
+        s.load_system_host_keys()
+        if auth_method == 1:
+		key = paramiko.RSAKey.from_private_key_file(auth_fileORpass)
+                s.connect(hostname,port,username,pkey=key)
+        elif auth_method == 0:
+		s.connect(hostname,port,username,auth_fileORpass)
+        else:
+		print "Wrong authorized method"
+                sys.exit(1)
+        stdin, stdout, stderr = s.exec_command(com_mand)
+        fileContent = stdout.read()
+        fileError = stderr.read()
+        s.close
+        if fileError != '':
+	        return fileError
+        else:
+                return fileContent
 
-def displayConfigFile():
+def displayConfigFile(auth_method,auth_fileORpass):
 	for program in program_List:
 		for configFile in configFilePathDict[program]:
 			for machine in machine_Dict[program]:
-				catConfigFile(machine,configFile)
-				print "%s:%s:%s" % (machine,program,configFile)
+				config_Content = catConfigFile(machine,configFile,auth_method,auth_fileORpass)
+				#print "%s:%s:%s" % (machine,program,configFile)
+				#这里可以取得一下configFile的最后字段，即配置文件的名字(configFile是配置文件的具体路径)
+				print "== %s in %s ==" % (program,machine)
+			        print config_Content
 
 if __name__ == '__main__':
 	path_Dict  = {}
@@ -82,6 +149,12 @@ if __name__ == '__main__':
 	print path_Dict
 	print config_Dict
 	print machine_Dict
-        configFilePathDict = findConfigFile()
+
+        #1-rsa key auth, 0-password auth
+        authorizedMethod = 1
+	#keyORpass = '123456'
+	keyORpass = '/home/debug/myproject/python/check-config/id_rsa'
+
+        configFilePathDict = findConfigFile(authorizedMethod,keyORpass)
 	print configFilePathDict
-	displayConfigFile()
+	#displayConfigFile(authorizedMethod,keyORpass)
