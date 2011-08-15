@@ -94,7 +94,7 @@ def findConfigFile(auth_method,auth_fileORpass):
 		config_Content_List = []
 		for config_Path in pathSet_List:
 			for config_Type in configSet_List:
-        			config_Content = catConfigFile(machine_Number,config_Path,config_Type,auth_method,auth_fileORpass)
+        			config_Content = getConfigFilePath(machine_Number,config_Path,config_Type,auth_method,auth_fileORpass)
         			#print config_Content
         			config_Content_List_Tmp = config_Content.split('\n')
         			config_Content_List.extend(config_Content_List_Tmp[0:(len(config_Content_List_Tmp)-1)])
@@ -157,4 +157,4 @@ if __name__ == '__main__':
 
         configFilePathDict = findConfigFile(authorizedMethod,keyORpass)
 	print configFilePathDict
-	#displayConfigFile(authorizedMethod,keyORpass)
+	displayConfigFile(authorizedMethod,keyORpass)
