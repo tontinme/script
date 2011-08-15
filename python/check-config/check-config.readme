@@ -3,14 +3,12 @@
 	显示出现该关键词的所有文件(机器号：路径/文件名:具体配置)
    #检查某个关键词是否在其所在的全部配置文件中都配置正确
 	列举所有文件中该关键词的具体配置(机器号：路径/文件名：具体配置)
-   #检查某个程序中都包含哪些关键词
-	列出该程序中所有配置文件的所有关键字具体配置(机器号：路径/文件名：具体配置)
+   ##检查某个程序中都包含哪些关键词
+   #	列出该程序中所有配置文件的所有关键字具体配置(机器号：路径/文件名：具体配置)
    #检查程序是否正常运行
    	通过各个程序部署文档给出的方法去检测各个日志的输出
    #检查各个程序需要创建的文件夹是否存在，权限是否正确
    	如果不存在，自动创建，并检查文件属主
-   #比较不同机器的同一配置文件是否相同
-   	diff file_in_machine1 file_in_machine2
 
 设计：
 #按程序显示(检查某个程序中都包含哪些关键词)
@@ -143,3 +141,13 @@ if __name__ == '__main_':
                 for machine in marhine_list_list[count]
                		-- 'configFilePathList' -->
                 	ssh user@machine 'cat configFilePathList[count]'
+
+#按关键词显示
+#由用户手动指定关键词 
+for program in program_List:
+	for machine in machine_Dict[program]:
+		for programPath in path_Dict[program]:
+			#理想的显示结果是: $keyword=具体值+configFileFullPath
+			keyword_Content = grep -irH $keyword programPath/*
+			f.write(keyword_Content)
+

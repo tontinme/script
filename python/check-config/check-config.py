@@ -1,5 +1,5 @@
 #!/usr/bin/env python # -*- coding: utf-8 -*-
-import os,sys
+import sys
 from ConfigParser import ConfigParser
 import paramiko
 
@@ -28,32 +28,32 @@ def readConfig():
 	return program_List
 
 #判断文件是否符否是要求的类型
-def isTargetFile(file_name,config_file_set):
-	split_List = file_name.split('.')
-        file_suffix = split_List[len(split_List) - 1]
-        if file_suffix in config_file_set:
-        	return True
-        return False
+#def isTargetFile(file_name,config_file_set):
+#	split_List = file_name.split('.')
+#        file_suffix = split_List[len(split_List) - 1]
+#        if file_suffix in config_file_set:
+#        	return True
+#        return False
 
 #查找给出的配置文件的具体路径
 #这里要更改为ssh连接,即从远程机器上判断具体路径
-def configFilePath(pathList,config_file_set,file_callback=None, topdown=True):
-	num_Index = 0
-	configFile_Path_List = []
-	for dir in pathList:
-		for root, dirs, files in os.walk(dir, topdown):
-			for f in files:
-				if isTargetFile(f,config_file_set):
-					#配置文件名称
-					#print f
-					#配置文件绝对路径
-					#print os.path.join(root,f)
-					configFile_Path_List.append(os.path.join(root,f))
-					#print configFile_Path_List[num_Index]
-					num_Index += 1
-				file_path = os.path.join(f)
-				if file_callback: file_callback(file_path)
-	return configFile_Path_List
+#def configFilePath(pathList,config_file_set,file_callback=None, topdown=True):
+#	num_Index = 0
+#	configFile_Path_List = []
+#	for dir in pathList:
+#		for root, dirs, files in os.walk(dir, topdown):
+#			for f in files:
+#				if isTargetFile(f,config_file_set):
+#					#配置文件名称
+#					#print f
+#					#配置文件绝对路径
+#					#print os.path.join(root,f)
+#					configFile_Path_List.append(os.path.join(root,f))
+#					#print configFile_Path_List[num_Index]
+#					num_Index += 1
+#				file_path = os.path.join(f)
+#				if file_callback: file_callback(file_path)
+#	return configFile_Path_List
 
 def getConfigFilePath(machine,program_path,config_type,auth_method,auth_fileORpass,port=22,username='supertool'):
 	hostname = machine
@@ -88,7 +88,6 @@ def findConfigFile(auth_method,auth_fileORpass):
 		machineSet_List = machine_Dict[program]
 		#configFilePath_List = catConfigFile(machineSet)
 		#configFile_Path_Dict[program] = configFilePath(pathSet_List,configSet_List)
-		print auth_method,auth_fileORpass
 
 		machine_Number = machineSet_List[0]
 		config_Content_List = []
@@ -103,8 +102,6 @@ def findConfigFile(auth_method,auth_fileORpass):
 	return configFile_Path_Dict
 
 #显示配置文件内容
-#def catConfigFile(machine,config):
-#	return "coming soon!"
 def catConfigFile(machine,config,auth_method,auth_fileORpass,port=22,username='supertool'):
 	hostname = machine
         #com_mand = 'cat %s' % config
@@ -131,14 +128,18 @@ def catConfigFile(machine,config,auth_method,auth_fileORpass,port=22,username='s
                 return fileContent
 
 def displayConfigFile(auth_method,auth_fileORpass):
+	#print file_log
+	f = open("show_ConfigFile_Content_log.txt",'a')
 	for program in program_List:
 		for configFile in configFilePathDict[program]:
 			for machine in machine_Dict[program]:
 				config_Content = catConfigFile(machine,configFile,auth_method,auth_fileORpass)
-				#print "%s:%s:%s" % (machine,program,configFile)
-				#这里可以取得一下configFile的最后字段，即配置文件的名字(configFile是配置文件的具体路径)
-				print "== %s in %s ==" % (program,machine)
-			        print config_Content
+				print "== %s :: %s ==" % (program,machine)
+				configFileName = configFile.split('/')[len(configFile.split('/'))-1]
+				f.write('\n== %s : %s : %s ==\n' % (program,configFileName,machine))
+			        #print config_Content
+				f.write(config_Content)
+	f.close()
 
 if __name__ == '__main__':
 	path_Dict  = {}
@@ -154,7 +155,11 @@ if __name__ == '__main__':
         authorizedMethod = 1
 	#keyORpass = '123456'
 	keyORpass = '/home/debug/myproject/python/check-config/id_rsa'
+	#file_log = 'show_ConfigFile_Content.log'
 
+	#取得所有配置文件的内容
         configFilePathDict = findConfigFile(authorizedMethod,keyORpass)
 	print configFilePathDict
 	displayConfigFile(authorizedMethod,keyORpass)
+
+	#在所有文件中查看某个关键词的所有具体配置
