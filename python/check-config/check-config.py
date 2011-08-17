@@ -14,11 +14,11 @@ def readConfig():
 		#print program_List
 		path_attr = config.get(program_List[count], "PATH")
 		path_List = path_attr.split(",")
-		path_Dict[program] = path_List
+		programPath_Dict[program] = path_List
 		#print path_List
 		config_attr = config.get(program_List[count], "CONFIG_TYPE")
 		config_List = config_attr.split(",")
-		config_Dict[program] = config_List
+		configType_Dict[program] = config_List
 		#print config_List
 		machine_attr = config.get(program_List[count], "MACHINE")
 		machine_List = machine_attr.split(",")
@@ -83,8 +83,8 @@ def getConfigFilePath(machine,program_path,config_type,auth_method,auth_fileORpa
 def findConfigFile(auth_method,auth_fileORpass):
 	configFile_Path_Dict = {}
 	for program in program_List:
-		configSet_List = config_Dict[program]
-		pathSet_List = path_Dict[program]
+		configSet_List = configType_Dict[program]
+		pathSet_List = programPath_Dict[program]
 		machineSet_List = machine_Dict[program]
 		#configFilePath_List = catConfigFile(machineSet)
 		#configFile_Path_Dict[program] = configFilePath(pathSet_List,configSet_List)
@@ -131,7 +131,7 @@ def displayConfigFile(auth_method,auth_fileORpass):
 	#print file_log
 	f = open("show_ConfigFile_Content_log.txt",'a')
 	for program in program_List:
-		for configFile in configFilePathDict[program]:
+		for configFile in configFilePath_Dict[program]:
 			for machine in machine_Dict[program]:
 				config_Content = catConfigFile(machine,configFile,auth_method,auth_fileORpass)
 				print "== %s :: %s ==" % (program,machine)
@@ -141,14 +141,20 @@ def displayConfigFile(auth_method,auth_fileORpass):
 				f.write(config_Content)
 	f.close()
 
+def getKeywordValue():
+	for program in program_List:
+		for configFile in configFilePath_Dict[program]:
+			for machine in machine_Dict[program]:
+	print "coming soon!"
+
 if __name__ == '__main__':
-	path_Dict  = {}
-	config_Dict = {}
+	programPath_Dict  = {}
+	configType_Dict = {}
 	machine_Dict = {}
 	program_List = readConfig()	
 	print program_List
-	print path_Dict
-	print config_Dict
+	print programPath_Dict
+	print configType_Dict
 	print machine_Dict
 
         #1-rsa key auth, 0-password auth
@@ -158,8 +164,8 @@ if __name__ == '__main__':
 	#file_log = 'show_ConfigFile_Content.log'
 
 	#取得所有配置文件的内容
-        configFilePathDict = findConfigFile(authorizedMethod,keyORpass)
-	print configFilePathDict
+        configFilePath_Dict = findConfigFile(authorizedMethod,keyORpass)
+	print configFilePath_Dict
 	displayConfigFile(authorizedMethod,keyORpass)
 
 	#在所有文件中查看某个关键词的所有具体配置
