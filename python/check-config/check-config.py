@@ -1,6 +1,7 @@
 #!/usr/bin/env python 
 # -*- coding: utf-8 -*-
 #USAGE EXAMPLE: python check-config.py -f ./check-config.cfg -i ./id_rsa -c SK -k kfs_host [-u supertool -p 22]
+#/usr/lib/pymodules/python2.6/paramiko/[util|client|rsakey]
 
 '''
 #=============================================================================
