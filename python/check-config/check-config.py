@@ -1,7 +1,6 @@
 #!/usr/bin/env python 
 # -*- coding: utf-8 -*-
-#USAGE EXAMPLE: python check-config.py -f ./check-config.cfg -i ./id_rsa -c SK -k kfs_host [-u supertool -p 22]
-#/usr/lib/pymodules/python2.6/paramiko/[util|client|rsakey]
+#USAGE EXAMPLE: python check-config.py -f ./check-config.cfg -i ./id_rsa [-o 654321] -c SK -k kfs_host [-u supertool -p 22]
 
 '''
 #=============================================================================
@@ -10,13 +9,12 @@
 #       Author: tontinme
 #        Email: tontinme@gmail.com
 #     HomePage: http://www.tontin.me
-#      Version: 0.1.0
-#   LastChange: 2011-08-21 23:17:42
+#      Version: 0.2.0
+#   LastChange: 2011-08-25 00:30:04
 #      History:
 #=============================================================================
 '''
 
-import sys
 from sys import argv
 from ConfigParser import ConfigParser
 import paramiko
@@ -24,22 +22,27 @@ import paramiko
 from os import path
 
 def input_argument():
-	global USER,PORT,CONFIGURE_FILE,PRI_KEY,PASSWORD,CMD,SPECIFYKEYWORD
+	global USER,PORT,CONFIGURE_FILE,PRI_KEY,PASSOFAUTH,PASSWORD,CMD,SPECIFYKEYWORD
 	for i in range(1,len(argv)+1):
 	        if argv[i-1] == '-h' or len(argv) == 1:
 	                print """
 	                USAGE:
-	                        -u [user]       use this argument to specify the user, default is 'supertool'
-	                        -f [file]       The config file path
-	                        -p [port]       The ssh port, default is 22
-	                        -i [pwd|file]   You can specify password or a private key file to connect the host
-	                        -c [command]    The command you want to run
-	                                        Command List:
-	                                        CF|catConfigFile
-	                                        SK|specifyKeyword
-	                        -k [keyword]    The keyword you want to displayKeyword
-	                                        If you specify '-k', you must specify '-c displayKeyword'
-	                        -h              Print this help screen
+	                        -u [user]       	use this argument to specify the user, default is 'supertool'
+	                        -f [file]       	The config file path, default is './check-config.cfg'
+	                        -p [port]       	The ssh port, default is 22
+	                        -i [pwd|file]   	You can specify password or a private key file to connect the host
+				-o [pass of id_rsa]	If your private key is encrypted,you should specify this pass, default is 'NULL'
+	                        -c [command]    	The command you want to run
+	                                        	Command List:
+	                                        	CF|catConfigFile
+	                                        	SK|specifyKeyword
+	                        -k [keyword]    	The keyword you want to displayKeyword
+	                                        	If you specify '-k', you must specify '-c displayKeyword'
+	                        -h              	Print this help screen
+
+			EXAMPLE:
+				python check-config.py  [-f ./check-config.cfg] -i /home/cinder/id_rsa [-o 654321] -c [SK -k kfs_host]|[CF]
+							[-u supertool] [-p 22]
 	                """
 	                exit(1)
 	        if argv[i-1] == '-u':
@@ -57,17 +60,22 @@ def input_argument():
 	                        PRI_KEY = argv[i]
 	                else:
 	                        PASSWORD = argv[i]
+		if argv[i-1] == '-o':
+			PASSOFAUTH = argv[i]
 	        if argv[i-1] == '-c':
 	                CMD = argv[i]
 	        if argv[i-1] == '-k':
 	                SPECIFYKEYWORD = argv[i]
 	if SPECIFYKEYWORD != '' and CMD != 'SK' and CMD != 'specifyKeyword':
 	        exit("If you specify '-k', you must specify '-c SK|specifyKeyword' as same!")
-	if CONFIGURE_FILE == '':
-	        exit("You must specify a configure file!")
-	if PRI_KEY == '' and PASSWORD == '':
-	        exit("You must specify a authorized method!")
-	elif PRI_KEY == '' and PASSWORD == '':
+	#if CONFIGURE_FILE == '':
+	#        exit("You must specify a configure file!")
+	if PRI_KEY == '':
+		if PASSWORD == '':
+	        	exit("You must specify a authorized method!")
+		if PASSOFAUTH != '':
+			exit("-o option could be used when you specify the private key authorized")
+	elif PRI_KEY != '' and PASSWORD != '':
 	        exit("You should only specify one authorized method!")
 	if CMD == '':
 	        exit("You must run a command!")
@@ -129,21 +137,24 @@ def readConfig():
 #				if file_callback: file_callback(file_path)
 #	return configFile_Path_List
 
-def getConfigFilePath(machine,program_path,config_type,auth_method,auth_fileORpass,PORT,USER):
+def getConfigFilePath(machine,program_path,config_type,auth_fileORpass,PASSOFAUTH,PORT,USER):
 	hostname = machine
         #com_mand = 'cat %s' % config
         com_mand = 'find %s -name *.%s' % (program_path,config_type)
         paramiko.util.log_to_file('check-ssh.log')
         s = paramiko.SSHClient()
         s.load_system_host_keys()
-        if auth_method == 1:
-                key = paramiko.RSAKey.from_private_key_file(auth_fileORpass)
+        if path.isfile(auth_fileORpass) == True:
+		try:
+                	key = paramiko.RSAKey.from_private_key_file(auth_fileORpass)
+		except paramiko.PasswordRequiredException:
+			key = paramiko.RSAKey.from_private_key_file(auth_fileORpass, PASSOFAUTH)
                 s.connect(hostname,PORT,USER,pkey=key)
-        elif auth_method == 0:
-                s.connect(hostname,PORT,USER,auth_fileORpass)
         else:
-                print "Wrong authorized method"
-                sys.exit(1)
+                s.connect(hostname,PORT,USER,auth_fileORpass)
+        #else:
+        #        print "Wrong authorized method"
+        #        sys.exit(1)
         stdin, stdout, stderr = s.exec_command(com_mand)
         fileContent = stdout.read()
         fileError = stderr.read()
@@ -154,7 +165,7 @@ def getConfigFilePath(machine,program_path,config_type,auth_method,auth_fileORpa
                 return fileContent
 
 #按程序分类存储各个配置文件的具体路径
-def findConfigFile(auth_method,auth_fileORpass):
+def findConfigFile(auth_fileORpass):
 	configFile_Path_Dict = {}
 	for program in program_List:
 		configSet_List = configType_Dict[program]
@@ -167,7 +178,7 @@ def findConfigFile(auth_method,auth_fileORpass):
 		config_Content_List = []
 		for config_Path in pathSet_List:
 			for config_Type in configSet_List:
-        			config_Content = getConfigFilePath(machine_Number,config_Path,config_Type,auth_method,auth_fileORpass,PORT,USER)
+        			config_Content = getConfigFilePath(machine_Number,config_Path,config_Type,auth_fileORpass,PASSOFAUTH,PORT,USER)
         			#print config_Content
         			config_Content_List_Tmp = config_Content.split('\n')
         			config_Content_List.extend(config_Content_List_Tmp[0:(len(config_Content_List_Tmp)-1)])
@@ -176,7 +187,7 @@ def findConfigFile(auth_method,auth_fileORpass):
 	return configFile_Path_Dict
 
 #对给定文件执行grep操作(显示配置文件内容，显示配置文件中的keyword值)
-def catConfigFile(machine,configFile_Path,grep_key_word,auth_method,auth_fileORpass,PORT,USER):
+def catConfigFile(machine,configFile_Path,grep_key_word,auth_fileORpass,PASSOFAUTH,PORT,USER):
 	hostname = machine
         #com_mand = 'cat %s' % config
 	#这里只寻找含有=的行，但是需要注意，有些配置文件不含=，比如abstractor的logserver.conf
@@ -184,14 +195,17 @@ def catConfigFile(machine,configFile_Path,grep_key_word,auth_method,auth_fileORp
         paramiko.util.log_to_file('check-ssh.log')
         s = paramiko.SSHClient()
         s.load_system_host_keys()
-        if auth_method == 1:
-		key = paramiko.RSAKey.from_private_key_file(auth_fileORpass)
+        if path.isfile(auth_fileORpass) == True:
+		try:
+			key = paramiko.RSAKey.from_private_key_file(auth_fileORpass)
+		except paramiko.PasswordRequiredException:
+			key = paramiko.RSAKey.from_private_key_file(auth_fileORpass, PASSOFAUTH)
                 s.connect(hostname,PORT,USER,pkey=key)
-        elif auth_method == 0:
+	else:
 		s.connect(hostname,PORT,USER,auth_fileORpass)
-        else:
-		print "Wrong authorized method"
-                sys.exit(1)
+        #else:
+	#	print "Wrong authorized method"
+        #        sys.exit(1)
         stdin, stdout, stderr = s.exec_command(com_mand)
         fileContent = stdout.read()
         fileError = stderr.read()
@@ -201,40 +215,43 @@ def catConfigFile(machine,configFile_Path,grep_key_word,auth_method,auth_fileORp
         else:
                 return fileContent
 
-def displayConfigFile(auth_method,auth_fileORpass):
+def displayConfigFile(auth_fileORpass):
 	#print file_log
 	grepKeyword = '='
 	f = open("show_ConfigFile_Content_log.txt",'a')
 	for program in program_List:
 		for configFile in configFilePath_Dict[program]:
 			for machine in machine_Dict[program]:
-				config_Content = catConfigFile(machine,configFile,grepKeyword,auth_method,auth_fileORpass,PORT,USER)
+				config_Content = catConfigFile(machine,configFile,grepKeyword,auth_fileORpass,PASSOFAUTH,PORT,USER)
 				print "== %s :: %s ==" % (program,machine)
 				configFileName = configFile.split('/')[len(configFile.split('/'))-1]
 				f.write('\n== %s : %s : %s ==\n' % (program,configFileName,machine))
 			        #print config_Content
 				f.write(config_Content)
 	f.close()
+	print "The Content of configFiles have been appended to show_ConfigFile_Content_log.txt"
 
-def getKeywordValue(auth_method,auth_fileORpass,grepKeyword):
+def getKeywordValue(auth_fileORpass,grepKeyword):
 	f = open("show_specify_keyword_log.txt",'a')
 	for program in program_List:
 		for configFile in configFilePath_Dict[program]:
 			for machine in machine_Dict[program]:
-				specifyKeyword_Content = catConfigFile(machine,configFile,grepKeyword,auth_method,auth_fileORpass,PORT,USER)
+				specifyKeyword_Content = catConfigFile(machine,configFile,grepKeyword,auth_fileORpass,PASSOFAUTH,PORT,USER)
 				print "== %s :: %s ==" % (program,machine)
 				configFileName = configFile.split('/')[len(configFile.split('/'))-1]
 				if specifyKeyword_Content != '':
 					f.write('\n== %s : %s : %s < %s > ==\n' % (program,machine,configFileName,configFile))
 					f.write(specifyKeyword_Content)
 	f.close()
+	print "The result of %s has been appended to show_specify_keyword_log.txt" % (grepKeyword)
 
 if __name__ == '__main__':
 	USER = 'supertool'
 	PORT = 22
-	CONFIGURE_FILE,PRI_KEY,PASSWORD,CMD,SPECIFYKEYWORD = '','','','',''
+	CONFIGURE_FILE = './check-config.cfg'
+	PRI_KEY,PASSOFAUTH,PASSWORD,CMD,SPECIFYKEYWORD = '','','','',''
 	input_argument()
-	print "-u|user:%s, -p|port:%d, -f|config_File:%s, -i|private_Key:%s, -i|password:%s, -c|comand:%s, -k|keyword:%s" % (USER,PORT,CONFIGURE_FILE,PRI_KEY,PASSWORD,CMD,SPECIFYKEYWORD)
+	print "-u|user:%s, -p|port:%d, -f|config_File:%s, -i|private_Key:%s, -o|passofauth:%s, -i|password:%s, -c|comand:%s, -k|keyword:%s" % (USER,PORT,CONFIGURE_FILE,PRI_KEY,PASSOFAUTH,PASSWORD,CMD,SPECIFYKEYWORD)
 
 	programPath_Dict  = {}
 	configType_Dict = {}
@@ -251,23 +268,21 @@ if __name__ == '__main__':
 	#keyORpass = '/home/debug/myproject/python/check-config/id_rsa'
 	#file_log = 'show_ConfigFile_Content.log'
 	if PRI_KEY != '' and PASSWORD == '':
-        	authorizedMethod = 1
 		keyORpass = PRI_KEY
 	elif PASSWORD != '' and PRI_KEY == '':
-        	authorizedMethod = 0
 		keyORpass = PASSWORD
 	else:
 		exit(1)
 
 	#取得所有配置文件的内容
-        configFilePath_Dict = findConfigFile(authorizedMethod,keyORpass)
+        configFilePath_Dict = findConfigFile(keyORpass)
 	print configFilePath_Dict
 	if CMD == 'CF' or CMD == 'catConfigFile':
-		displayConfigFile(authorizedMethod,keyORpass)
+		displayConfigFile(keyORpass)
 
 	#在所有文件中查看某个关键词的所有具体配置
 	elif CMD == 'SK' or CMD == 'specifyKeyword':
 		specifyKeyword = SPECIFYKEYWORD
-		getKeywordValue(authorizedMethod,keyORpass,specifyKeyword)
+		getKeywordValue(keyORpass,specifyKeyword)
 	else:
 		exit("UNKOWN COMMAND!")
