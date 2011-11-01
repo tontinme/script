@@ -1,6 +1,6 @@
 #!/usr/bin/env python 
 # -*- coding: utf-8 -*-
-#USAGE EXAMPLE: python check-config.py -f ./check-config.cfg -i ./id_rsa [-o 654321] -c SK -k kfs_host [-u supertool -p 22]
+#USAGE EXAMPLE: python check-config.py -f ./check-config.cfg -i ./id_rsa [-o 654321] -c SK -k kfs_host [-u tontinme -p 22]
 
 '''
 #=============================================================================
@@ -27,7 +27,7 @@ def input_argument():
 	        if argv[i-1] == '-h' or len(argv) == 1:
 	                print """
 	                USAGE:
-	                        -u [user]       	use this argument to specify the user, default is 'supertool'
+	                        -u [user]       	use this argument to specify the user, default is 'tontinme'
 	                        -f [file]       	The config file path, default is './check-config.cfg'
 	                        -p [port]       	The ssh port, default is 22
 	                        -i [pwd|file]   	You can specify password or a private key file to connect the host
@@ -42,7 +42,7 @@ def input_argument():
 
 			EXAMPLE:
 				python check-config.py  [-f ./check-config.cfg] -i /home/cinder/id_rsa [-o 654321] -c [SK -k kfs_host]|[CF]
-							[-u supertool] [-p 22]
+							[-u tontinme] [-p 22]
 	                """
 	                exit(1)
 	        if argv[i-1] == '-u':
@@ -246,7 +246,7 @@ def getKeywordValue(auth_fileORpass,grepKeyword):
 	print "The result of %s has been appended to show_specify_keyword_log.txt" % (grepKeyword)
 
 if __name__ == '__main__':
-	USER = 'supertool'
+	USER = 'tontinme'
 	PORT = 22
 	CONFIGURE_FILE = './check-config.cfg'
 	PRI_KEY,PASSOFAUTH,PASSWORD,CMD,SPECIFYKEYWORD = '','','','',''
